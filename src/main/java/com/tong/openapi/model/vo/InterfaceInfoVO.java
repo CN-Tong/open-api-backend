@@ -59,6 +59,21 @@ public class InterfaceInfoVO implements Serializable {
      */
     private Integer status;
 
+    /**
+     * 创建用户id
+     */
+    private Long userId;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
     // /**
     //  * 包装类转对象
     //  *
