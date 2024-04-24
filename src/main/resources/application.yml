@@ -48,7 +48,7 @@ server:
     # cookie 30 天过期
     session:
       cookie:
-        max-age: 2592000
+        max-age: 1800
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
@@ -87,3 +87,7 @@ cos:
     secretKey: xxx
     region: xxx
     bucket: xxx
+tong:
+  client:
+    access-key: tong
+    secret-key: abcdefgh

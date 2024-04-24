@@ -3,10 +3,7 @@ package com.tong.openapi.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.tong.openapi.annotation.AuthCheck;
-import com.tong.openapi.common.BaseResponse;
-import com.tong.openapi.common.DeleteRequest;
-import com.tong.openapi.common.ErrorCode;
-import com.tong.openapi.common.ResultUtils;
+import com.tong.openapi.common.*;
 import com.tong.openapi.constant.UserConstant;
 import com.tong.openapi.exception.BusinessException;
 import com.tong.openapi.exception.ThrowUtils;
@@ -19,8 +16,11 @@ import com.tong.openapi.model.entity.User;
 import com.tong.openapi.model.vo.InterfaceInfoVO;
 import com.tong.openapi.service.InterfaceInfoService;
 import com.tong.openapi.service.UserService;
+import com.tong.tongclientsdk.client.TongClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -41,6 +41,9 @@ public class InterfaceInfoController {
 
     @Resource
     private UserService userService;
+
+    @Autowired
+    private TongClient tongClient;
 
     private final static Gson GSON = new Gson();
 
@@ -179,23 +182,61 @@ public class InterfaceInfoController {
         return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOPage(interfaceInfoPage, request));
     }
 
-    // endregion
+    /**
+     * 发布接口
+     *
+     */
+    @PostMapping("/online")
+    @AuthCheck(mustRole = "admin")
+    public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody IdRequest idRequest) {
+        // 校验id是否为空
+        if(idRequest == null || idRequest.getId() <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 校验接口是否存在
+        Long id = idRequest.getId();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if(interfaceInfo == null){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        // 判断该接口是否可以调用
+        com.tong.tongclientsdk.model.User user = new com.tong.tongclientsdk.model.User();
+        user.setUsername("test");
+        String username = tongClient.getNameByPostThroughJson(user);
+        if(StringUtils.isBlank(username)){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
+        }
+        // 修改数据库状态为1
+        boolean success = interfaceInfoService.lambdaUpdate()
+                .eq(InterfaceInfo::getId, id)
+                .set(InterfaceInfo::getStatus, 1)
+                .update();
+        return ResultUtils.success(success);
+    }
 
     /**
-     * 分页搜索（从 ES 查询，封装类）
+     * 下线接口
      *
-     * @param interfaceInfoQueryRequest
-     * @param request
-     * @return
      */
-    @PostMapping("/search/page/vo")
-    public BaseResponse<Page<InterfaceInfoVO>> searchInterfaceInfoVOByPage(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest,
-            HttpServletRequest request) {
-        long size = interfaceInfoQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.searchFromEs(interfaceInfoQueryRequest);
-        return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOPage(interfaceInfoPage, request));
+    @PostMapping("/offline")
+    @AuthCheck(mustRole = "admin")
+    public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest) {
+        // 校验id是否为空
+        if(idRequest == null || idRequest.getId() <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 校验接口是否存在
+        Long id = idRequest.getId();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if(interfaceInfo == null){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        // 修改数据库状态为0
+        boolean success = interfaceInfoService.lambdaUpdate()
+                .eq(InterfaceInfo::getId, id)
+                .set(InterfaceInfo::getStatus, 0)
+                .update();
+        return ResultUtils.success(success);
     }
 
     /**

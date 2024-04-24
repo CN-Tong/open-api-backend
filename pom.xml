@@ -19,6 +19,13 @@
         <java.version>1.8</java.version>
     </properties>
     <dependencies>
+        <!--模拟接口sdk-->
+        <dependency>
+            <groupId>com.tong</groupId>
+            <artifactId>tong-client-sdk</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>
