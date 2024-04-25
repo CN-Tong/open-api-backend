@@ -45,6 +45,11 @@ public class InterfaceInfoVO implements Serializable {
     private String method;
 
     /**
+     * 请求参数
+     */
+    private String requestParams;
+
+    /**
      * 请求头
      */
     private String requestHeader;

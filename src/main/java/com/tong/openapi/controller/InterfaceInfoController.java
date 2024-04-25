@@ -1,5 +1,6 @@
 package com.tong.openapi.controller;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.tong.openapi.annotation.AuthCheck;
@@ -7,10 +8,7 @@ import com.tong.openapi.common.*;
 import com.tong.openapi.constant.UserConstant;
 import com.tong.openapi.exception.BusinessException;
 import com.tong.openapi.exception.ThrowUtils;
-import com.tong.openapi.model.dto.interfaceinfo.InterfaceInfoAddRequest;
-import com.tong.openapi.model.dto.interfaceinfo.InterfaceInfoEditRequest;
-import com.tong.openapi.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
-import com.tong.openapi.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
+import com.tong.openapi.model.dto.interfaceinfo.*;
 import com.tong.openapi.model.entity.InterfaceInfo;
 import com.tong.openapi.model.entity.User;
 import com.tong.openapi.model.vo.InterfaceInfoVO;
@@ -200,12 +198,12 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         // 判断该接口是否可以调用
-        com.tong.tongclientsdk.model.User user = new com.tong.tongclientsdk.model.User();
-        user.setUsername("test");
-        String username = tongClient.getNameByPostThroughJson(user);
-        if(StringUtils.isBlank(username)){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
-        }
+        // com.tong.tongclientsdk.model.User user = new com.tong.tongclientsdk.model.User();
+        // user.setUsername("test");
+        // String username = tongClient.getNameByPostThroughJson(user);
+        // if(StringUtils.isBlank(username)){
+        //     throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
+        // }
         // 修改数据库状态为1
         boolean success = interfaceInfoService.lambdaUpdate()
                 .eq(InterfaceInfo::getId, id)
@@ -237,6 +235,39 @@ public class InterfaceInfoController {
                 .set(InterfaceInfo::getStatus, 0)
                 .update();
         return ResultUtils.success(success);
+    }
+
+    /**
+     * 在线调用接口
+     *
+     */
+    @PostMapping("/invoke")
+    public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest invokeRequest,
+                                                 HttpServletRequest request) {
+        // 校验id是否为空
+        if(invokeRequest == null || invokeRequest.getId() <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 校验接口是否存在
+        Long id = invokeRequest.getId();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if(interfaceInfo == null){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "接口不存在");
+        }
+        // 校验接口状态
+        if(interfaceInfo.getStatus() == 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口未发布");
+        }
+        // 调用接口
+        User user = userService.getLoginUser(request);
+        String accessKey = user.getAccessKey();
+        String secretKey = user.getSecretKey();
+        TongClient tempClient = new TongClient(accessKey, secretKey);
+        // json转接口内的user对象
+        String paramsJson = invokeRequest.getUserRequestParams();
+        com.tong.tongclientsdk.model.User paramsUser = JSONUtil.toBean(paramsJson, com.tong.tongclientsdk.model.User.class);
+        String res = tempClient.getNameByPostThroughJson(paramsUser);
+        return ResultUtils.success(res);
     }
 
     /**

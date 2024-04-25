@@ -40,12 +40,29 @@ public class InterfaceInfo implements Serializable {
     private String method;
 
     /**
+     * 请求参数
+     * [
+     *   {
+     *     "name": "username",
+     *     "type": "string"
+     *   }
+     * ]
+     */
+    private String requestParams;
+
+    /**
      * 请求头
+     * {
+     *   "Content-Type": "application/json"
+     * }
      */
     private String requestHeader;
 
     /**
      * 响应头
+     * {
+     *   "Content-Type": "application/json"
+     * }
      */
     private String responseHeader;
 

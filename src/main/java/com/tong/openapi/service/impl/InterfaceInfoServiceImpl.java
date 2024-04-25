@@ -99,7 +99,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
 
     @Override
     public InterfaceInfoVO getInterfaceInfoVO(InterfaceInfo interfaceInfo, HttpServletRequest request) {
-        throw new BusinessException(ErrorCode.SYSTEM_ERROR, "功能未完成");
+        return BeanUtil.copyProperties(interfaceInfo, InterfaceInfoVO.class);
     }
 
     @Override
