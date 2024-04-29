@@ -40,6 +40,16 @@ spring:
     multipart:
       # 大小限制
       max-file-size: 10MB
+  cloud:
+    nacos:
+      server-addr: 192.168.79.128:8848
+dubbo:
+  protocol:
+    port: 20881
+  registry:
+    address: nacos://192.168.79.128:8848
+  application:
+    name: dubbo-open-api-backend
 server:
   address: 0.0.0.0
   port: 8101

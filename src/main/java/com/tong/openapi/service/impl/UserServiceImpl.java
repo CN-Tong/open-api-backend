@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -35,6 +36,7 @@ import org.springframework.util.DigestUtils;
  */
 @Service
 @Slf4j
+@DubboService
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     /**
@@ -273,5 +275,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
+    }
+
+    @Override
+    public User getUserByAk(String accessKey) {
+        if(StringUtils.isBlank(accessKey)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        return lambdaQuery().eq(User::getAccessKey, accessKey).one();
     }
 }

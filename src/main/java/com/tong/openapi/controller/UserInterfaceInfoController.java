@@ -150,4 +150,9 @@ public class UserInterfaceInfoController {
         return ResultUtils.success(userInterfaceInfoService.getUserInterfaceInfoVOPage(userInterfaceInfoPage, request));
     }
 
+    @GetMapping("invoke/onecount/{userId}")
+    public boolean invokeOneCount(@PathVariable("userId") Long userId){
+        return userInterfaceInfoService.invokeOneCount(23L, userId);
+    }
+
 }
